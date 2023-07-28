@@ -1050,4 +1050,33 @@ mod test {
         }
     }
 
+     #[test]
+    fn test_print_expression_atom() {
+        // Create a vector of sub-atoms
+        let sub_atoms: Vec<Atom> = vec![
+            Atom::value(3),
+            Atom::sym("hello".to_string()),
+            Atom::value(5),
+        ];
+
+        // Create an ExpressionAtom from the vector of sub-atoms
+        let expression_atom = ExpressionAtom::new(sub_atoms.clone());
+
+        // Print out the value of the ExpressionAtom
+        println!("ExpressionAtom: {}", expression_atom);
+
+        let expr = Atom::expr([Atom::sym("a"), Atom::sym("b")]);
+        let same_expr = Atom::expr([Atom::sym("a"), Atom::sym("b")]);
+        let other_expr = Atom::expr([Atom::sym("+"), Atom::var("x"),
+            Atom::expr([Atom::sym("*"), Atom::value(5), Atom::value(8)])]);
+        
+        println!("expr: {}", expr);
+        println!("same_expr: {}", same_expr);
+        println!("other_expr: {}", other_expr);
+
+        // Assert something meaningful if needed
+        // For example, you could check if the output contains certain sub-atoms or check its plainness
+        // assert!(expression_atom.is_plain());
+    }
+
 }
