@@ -1066,13 +1066,13 @@ mod test {
         println!("ExpressionAtom: {}", expression_atom);
 
         let expr = Atom::expr([Atom::sym("a"), Atom::sym("b")]);
-        let same_expr = Atom::expr([Atom::sym("a"), Atom::sym("b")]);
-        let other_expr = Atom::expr([Atom::sym("+"), Atom::var("x"),
-            Atom::expr([Atom::sym("*"), Atom::value(5), Atom::value(8)])]);
+        // let same_expr = Atom::expr([Atom::sym("a"), Atom::sym("b")]);
+        // let other_expr = Atom::expr([Atom::sym("+"), Atom::var("x"),
+        //     Atom::expr([Atom::sym("*"), Atom::value(5), Atom::value(8)])]);
         
         println!("expr: {}", expr);
-        println!("same_expr: {}", same_expr);
-        println!("other_expr: {}", other_expr);
+        // println!("same_expr: {}", same_expr);
+        // println!("other_expr: {}", other_expr);
 
         // Assert something meaningful if needed
         // For example, you could check if the output contains certain sub-atoms or check its plainness
