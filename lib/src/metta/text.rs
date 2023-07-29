@@ -343,4 +343,12 @@ mod tests {
         tokenizer.register_token(Regex::new(r"A").unwrap(), |_| Atom::sym("B"));
         assert_eq!(tokenizer.find_token("A").unwrap()("A"), Atom::sym("B"));
     }
+
+    #[test]
+    fn sealed_parse() {
+        let mut parser = SExprParser::new("(= ($x $y) (($x $y) (= (Add $z $y))))");
+        let val = parser.parse(&Tokenizer::new());
+        println!("val: {:?}", val);
+    }
+
 }

@@ -1067,12 +1067,16 @@ mod test {
 
         let expr = Atom::expr([Atom::sym("a"), Atom::sym("b")]);
         // let same_expr = Atom::expr([Atom::sym("a"), Atom::sym("b")]);
-        // let other_expr = Atom::expr([Atom::sym("+"), Atom::var("x"),
-        //     Atom::expr([Atom::sym("*"), Atom::value(5), Atom::value(8)])]);
+
+        //val expTest3 = Expr(Expr(===, Expr(Sealed(Vector[String]("x", "y")), Var("x"), Var("y"))),Expr(Sealed(Vector[String]("y", "z")), Var("x"), Var("y"), Expr(===, Expr(StringLiteral("Add"), Var("z")), Var("y"))))
+        //expTest4 = Expr(Vector(Expr(Vector(===, Expr(Vector(Var(x), Var(y))))), Expr(Vector(Var(x), Var(y), Expr(Vector(===, Expr(Vector(StringLiteral(Add), Var(z))), Var(y)))))))
+
+        let nested_expr = Atom::expr([Atom::sym("="),Atom::expr([Atom::var("x"),Atom::var("y")]), Atom::expr([Atom::expr([Atom::var("x"),Atom::var("y")]),Atom::expr([Atom::sym("="),Atom::expr([Atom::sym("Add"),Atom::var("z"),Atom::var("y")])])])  ]);
         
+
         println!("expr: {}", expr);
         // println!("same_expr: {}", same_expr);
-        // println!("other_expr: {}", other_expr);
+        println!("nested_expr: {}", nested_expr);
 
         // Assert something meaningful if needed
         // For example, you could check if the output contains certain sub-atoms or check its plainness
