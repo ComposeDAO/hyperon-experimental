@@ -953,6 +953,7 @@ impl Grounded for LetVarOp {
     }
 }
 
+
 #[derive(Clone, PartialEq, Debug)]
 pub struct StateAtom {
     state: Rc<RefCell<Atom>>
@@ -1073,6 +1074,98 @@ impl Grounded for ChangeStateOp {
     }
 }
 
+#[derive(Clone, PartialEq, Debug)]
+pub struct SealedOp {}
+
+impl Display for SealedOp {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "sealed")
+    }
+}
+
+impl Grounded for SealedOp {
+    fn type_(&self) -> Atom {
+        // TODO: Undefined for the argument is necessary to make argument reductable.
+        Atom::expr([ATOM_TYPE_ATOM, ATOM_TYPE_ATOM])
+    }
+
+    fn execute(&self, args: &[Atom]) -> Result<Vec<Atom>, ExecError> {
+        let arg_error = || ExecError::from("sealed expects two arguments: var_list and expression");
+
+        println!("args: {:?}", args);
+        println!("args.get(0): {:?}", args.get(0));
+
+        let mut term_to_seal = args.get(1).ok_or_else(arg_error)?.clone();
+        let mut var_list = args.get(0).ok_or_else(arg_error)?.clone();
+
+        //let vars_map = get_var_map(&term_to_seal, &mut var_list);
+        //println!("vars_map: {:?}", vars_map);
+
+        let external_vars = replace_vars(&mut var_list, &mut term_to_seal);
+
+        let result = vec![term_to_seal.clone()];
+        println!("sealed::execute: var_list: {}, term_to_seal: {}, result: {:?}", var_list, term_to_seal, result);
+        log::debug!("sealed::execute: var_list: {}, term_to_seal: {}, result: {:?}", var_list, term_to_seal, result);
+        //let result = vec![term_to_seal];
+
+        Ok(result)
+    }
+
+    fn match_(&self, other: &Atom) -> MatchResultIter {
+        match_by_equality(self, other)
+    }
+}
+
+fn replace_vars(var_list: &mut Atom, template: &mut Atom) -> HashSet<VariableAtom> {
+    let mut external_vars = HashSet::new();
+    collect_vars(&var_list, &mut external_vars);
+    seal_vars(var_list, template, &external_vars);
+    println!("external_vars: {:?}", external_vars);
+    external_vars
+}
+
+// fn get_var_map(term: &Atom, var_list: &mut Atom) -> HashMap<String, String> {
+//     let mut unique_var_list = HashMap::new();
+//     println!("get_var_map term = {:?}", term);
+//     println!("get_var_map var_list = {:?}", var_list);
+//     generate_vars(var_list, &mut unique_var_list);
+//     println!("get_var_map unique_var_list = {:?}", unique_var_list);
+//     for (name, value) in unique_var_list.iter() {
+//         println!("Variable name: {}, Value: {}", name, value);
+//     }
+//     //collect_vars(&template, &mut external_vars);
+//     //make_conflicting_vars_unique(pattern, template, &external_vars);
+//     unique_var_list
+// }
+
+// fn generate_vars(atom: &mut Atom, vars: &mut HashMap<String, String>) {
+//     atom.iter()
+//         .filter_type::<&VariableAtom>()
+//         .for_each(|var| {
+//             vars.insert(var.name().clone(), "some_value".to_string());
+//         });
+// }
+
+fn seal_vars(var_list: &mut Atom, term: &mut Atom, external_vars: &HashSet<VariableAtom>) {
+    let mut local_var_mapper = ReplacingMapper::new(VariableAtom::make_unique);
+    println!("local_var_mapper = {:?}", local_var_mapper.mapping_mut());
+
+    println!("var_list = {:?}", var_list);
+    var_list.iter_mut().filter_type::<&mut VariableAtom>()
+        .filter(|var| external_vars.contains(var))
+        .for_each(|var| local_var_mapper.replace(var));
+    println!("var_list = {:?}", var_list);
+
+    println!("term = {:?}", term);
+    term.iter_mut().filter_type::<&mut VariableAtom>()
+        .for_each(|var| match local_var_mapper.mapping_mut().get(var) {
+            Some(v) => *var = v.clone(),
+            None => {},
+        });
+    println!("term = {:?}", term);
+    println!("local_var_mapper = {:?}", local_var_mapper.mapping_mut());
+}
+
 
 fn regex(regex: &str) -> Regex {
     Regex::new(regex).unwrap()
@@ -1108,6 +1201,8 @@ pub fn register_common_tokens(metta: &Metta) {
     tref.register_token(regex(r"nop"), move |_| { nop_op.clone() });
     let let_op = Atom::gnd(LetOp{});
     tref.register_token(regex(r"let"), move |_| { let_op.clone() });
+    let sealed_op = Atom::gnd(SealedOp{});
+    tref.register_token(regex(r"sealed"), move |_| { sealed_op.clone() });
     let let_var_op = Atom::gnd(LetVarOp{});
     tref.register_token(regex(r"let\*"), move |_| { let_var_op.clone() });
     let new_state_op = Atom::gnd(NewStateOp{});
@@ -1579,5 +1674,26 @@ mod tests {
         assert_eq!(new_state, &Atom::gnd(StateAtom::new(expr!("C" "D"))));
         let result = GetStateOp{}.execute(&mut vec![new_state.clone()]);
         assert_eq!(result, Ok(vec![expr!("C" "D")]))
+    }
+
+    #[test]
+    fn sealed_op() {
+
+        //let letVal = run_program("!(let ($x $x) ($z $y) (let $y A ($z $y)))");
+        //println!("letVal = {:?}", letVal);
+        let val = run_program("!(sealed ($x $y) (=($y $z)))");
+        println!("val = {:?}", val);
+    }
+
+    #[test]
+    fn sealed_op_execute() {
+        let val = SealedOp{}.execute(&mut vec![expr!(x y), expr!("="(y z))]);
+        println!("val = {:?}", val);
+    }
+
+    #[test]
+    fn let_op_test2() {
+        let val = LetOp{}.execute(&mut vec![expr!(a b), expr!("A" "B"), expr!(b a)]);
+        println!("val = {:?}", val);
     }
 }

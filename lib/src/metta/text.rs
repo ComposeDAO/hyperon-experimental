@@ -346,7 +346,7 @@ mod tests {
 
     #[test]
     fn sealed_parse() {
-        let mut parser = SExprParser::new("(= ($x $y) (($x $y) (= (Add $z $y))))");
+        let mut parser = SExprParser::new("(sealed ($x $y) (($x $y) (= (Add $z $y))))");
         let val = parser.parse(&Tokenizer::new());
         println!("val: {:?}", val);
     }
