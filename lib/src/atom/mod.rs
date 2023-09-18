@@ -810,7 +810,30 @@ impl<'a> TryFrom<&'a Atom> for &'a ExpressionAtom {
     fn try_from(atom: &Atom) -> Result<&ExpressionAtom, &'static str> {
         match atom {
             Atom::Expression(expr) => Ok(&expr),
-            _ => Err("Atom is not a ExpressionAtom")
+            _ => Err("Atom is not an ExpressionAtom")
+        }
+    }
+}
+
+impl<const N: usize> TryFrom<Atom> for [Atom; N] {
+    type Error = &'static str;
+    fn try_from(atom: Atom) -> Result<[Atom; N], &'static str> {
+        match atom {
+            Atom::Expression(expr) => {
+                <[Atom; N]>::try_from(expr.into_children())
+                    .map_err(|_| concat!("ExpressionAtom length is not equal to expected"))
+            },
+            _ => Err("Atom is not an ExpressionAtom")
+        }
+    }
+}
+
+impl<'a> TryFrom<&'a Atom> for &'a [Atom] {
+    type Error = &'static str;
+    fn try_from(atom: &Atom) -> Result<&[Atom], &'static str> {
+        match atom {
+            Atom::Expression(expr) => Ok(expr.children().as_slice()),
+            _ => Err("Atom is not an ExpressionAtom")
         }
     }
 }
@@ -1050,37 +1073,22 @@ mod test {
         }
     }
 
-     #[test]
-    fn test_print_expression_atom() {
-        // Create a vector of sub-atoms
-        let sub_atoms: Vec<Atom> = vec![
-            Atom::value(3),
-            Atom::sym("hello".to_string()),
-            Atom::value(5),
-        ];
+    #[test]
+    fn test_array_try_from_expression_atom() {
+        assert_eq!(<[Atom; 2]>::try_from(expr!("A" "B")),
+            Ok([sym!("A"), sym!("B")]));
+        assert_eq!(<[Atom; 1]>::try_from(sym!("A")),
+            Err("Atom is not an ExpressionAtom"));
+        assert_eq!(<[Atom; 2]>::try_from(expr!("A" "B" "C")),
+            Err("ExpressionAtom length is not equal to expected"));
+    }
 
-        // Create an ExpressionAtom from the vector of sub-atoms
-        let expression_atom = ExpressionAtom::new(sub_atoms.clone());
-
-        // Print out the value of the ExpressionAtom
-        println!("ExpressionAtom: {}", expression_atom);
-
-        let expr = Atom::expr([Atom::sym("a"), Atom::sym("b")]);
-        // let same_expr = Atom::expr([Atom::sym("a"), Atom::sym("b")]);
-
-        //val expTest3 = Expr(Expr(===, Expr(Sealed(Vector[String]("x", "y")), Var("x"), Var("y"))),Expr(Sealed(Vector[String]("y", "z")), Var("x"), Var("y"), Expr(===, Expr(StringLiteral("Add"), Var("z")), Var("y"))))
-        //expTest4 = Expr(Vector(Expr(Vector(===, Expr(Vector(Var(x), Var(y))))), Expr(Vector(Var(x), Var(y), Expr(Vector(===, Expr(Vector(StringLiteral(Add), Var(z))), Var(y)))))))
-
-        let nested_expr = Atom::expr([Atom::sym("="),Atom::expr([Atom::var("x"),Atom::var("y")]), Atom::expr([Atom::expr([Atom::var("x"),Atom::var("y")]),Atom::expr([Atom::sym("="),Atom::expr([Atom::sym("Add"),Atom::var("z"),Atom::var("y")])])])  ]);
-        
-
-        println!("expr: {}", expr);
-        // println!("same_expr: {}", same_expr);
-        println!("nested_expr: {}", nested_expr);
-
-        // Assert something meaningful if needed
-        // For example, you could check if the output contains certain sub-atoms or check its plainness
-        // assert!(expression_atom.is_plain());
+    #[test]
+    fn test_slice_try_from_expression_atom() {
+        assert_eq!(<&[Atom]>::try_from(&expr!("A" "B" "C")),
+            Ok([sym!("A"), sym!("B"), sym!("C")].as_slice()));
+        assert_eq!(<&[Atom]>::try_from(&sym!("A")),
+            Err("Atom is not an ExpressionAtom"));
     }
 
 }

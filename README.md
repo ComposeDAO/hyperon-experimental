@@ -1,4 +1,4 @@
-![CI](https://github.com/trueagi-io/hyperon-experimental/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/trueagi-io/hyperon-experimental/actions/workflows/ci-auto.yml/badge.svg)
 
 # Overview
 
@@ -50,7 +50,7 @@ Rust (see the Notes at the installation page).
   * Python3 and Python3-dev (3.7 or later)
   * Pip (23.1.2 or later)
   * GCC (7.5 or later)
-  * CMake (3.10 or later)
+  * CMake (3.15 or later)
 
 * Install cbindgen:
 ```
@@ -59,7 +59,7 @@ cargo install --force cbindgen
 
 * Install Conan and make default Conan profile:
 ```
-python3 -m pip install conan==1.60.1
+python3 -m pip install conan==1.60.2
 conan profile new --detect default
 ```
 
@@ -241,9 +241,9 @@ All components which depend on `libhyperonc` are built using
 [CMake](https://cmake.org/) build tool in order to manage dependencies
 automatically.
 
-Diagram below demonstrates main components and dependencies between them:
-![Diagram of the structure](./doc/structure.svg)
-[Source code of the diagram](./doc/structure.plantuml)
+The diagram below demonstrates main components and dependencies between them:
+![Diagram of the structure](./docs/assets/structure.svg)
+[Source code of the diagram](./docs/assets/structure.plantuml)
 
 ## Language support for IDEs
 

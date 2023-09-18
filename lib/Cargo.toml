@@ -1,6 +1,6 @@
 [package]
 name = "hyperon"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Vitaly Bogdanov <vsbogd@gmail.com>"]
 edition = "2018"
 
@@ -16,3 +16,7 @@ smallvec = "1.10.0"
 name = "hyperon"
 path = "src/lib.rs"
 crate-type = ["lib"]
+
+[features]
+#default = ["minimal"]
+minimal = []
